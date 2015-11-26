@@ -1,0 +1,25 @@
+dog (sample1a)
+1024x512
+
+afrik_BIG
+1024x1024
+
+card_sharks_8
+512x512
+
+______________________
+
+Raw Heightmaps (uchar 8bit)
+afrik_8.raw
+card_sharks_8.raw
+dog_8.raw
+
+Raw SIRDS (IEEE Float)
+dog_fsirds.raw
+afrik_fsirds.raw
+card_sharks_fsirds.raw
+
+Output of decoder (IEEE Float)
+dog_fdec.raw
+afrik_fdec.raw
+card_sharks_fdec.raw
