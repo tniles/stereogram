@@ -36,7 +36,8 @@
 #define near separation(2.0) 	/* ... and corresponding to near plane, Zpix=2.0 */
 
 unsigned int PTHRESH;		/* need at least this many pixels to qualify as pixel width pattern */
-unsigned int STHRESH;	/* initial prediction of separation */
+unsigned int STHRESHMIN;	/* near plane prediction */
+unsigned int STHRESHMAX;	/* far plane prediction */
 
 #if 1
 typedef float PIXEL;		// define pixel datatype
@@ -151,7 +152,7 @@ int heightmap(IMAGE *map)
 int DecodeStereo(IMAGE *target, IMAGE *sirds)
 {
   /* Object’s depth is Z(x,y) (between 0 and 1) */
-  int x,y;		/* Coordinates of the current point */
+  int x,y;		/* Current point - MUST BE SIGNED! */
 
   int maxX = sirds->xmax;
   int maxY = sirds->ymax;
@@ -159,83 +160,51 @@ int DecodeStereo(IMAGE *target, IMAGE *sirds)
   int flag;
   int sep1, sep2;	/* Stereo separation tracked by STHRESH, calc'd thru sep2-sep1 */
 
-  PIXEL *pix;		/* Color of this pixel */
-  
-  pix  = malloc(maxX * sizeof(PIXEL));
+  //PIXEL *pix;		/* temp array for pixel correlation */
+  PIXEL zval;		/* Color of this pixel */
+ 
+  unsigned int sthresh; 
+ 
+  //pix  = malloc(maxX * sizeof(PIXEL));
 
   /* Find the Separation (AutoCorrelate) */
-  y = maxY/2;  // try midway up...
-  for(x=0;x<maxX;x++){
-    pix[x] = *((sirds->img) + (x + maxX*y));	// read-in line
-  }
-  flag=0;
-  sep1=0;				// init counter
-  sep2=sep1;				// init counter
-  for(x=0;x<maxX;x++){			/* process line (use initial guess of separation) */
-    if((x+STHRESH) > maxX){	// Stay in-bounds (memory)
-      if(!flag){
-	//y = maxY/3;		// separation was not found... try another y line
-	//x = 0;
-	//continue;
-      }
-      break;			// ...this assumes sep can be found prior to x=(maxX-STHRESH)
-    }
-    if(pix[x] == pix[x+STHRESH]){	/* PIXELS MATCH... investigate possible pattern */
-      sep2++;	//same, so record index
-      //check if next pixel also matches
-      		//if not, delete index, start over...
-      		//if so, continue until matching ceases (you've found the second image!)
-    }
-    else if((sep2-sep1) >= PTHRESH){	/* PIXELS DON'T MATCH... see if the run was long enough to be an image element */
-      /* add later: grow backwards (x--) to verify element wasn't truncated */
-      //
-      /* Pattern is at least as large as req'd to qualify as part of the image/object
-       * so update the Separation Threshold value */
-      if(!flag){
-        STHRESH = sep2 - sep1;
-	flag = 1;
-      }
-      else{
-	//a 2nd separation value was found
-      }
-      break;			// exit loop, true separation width was found
-    }
-    else{			/* PIXELS DON'T MATCH, NOR do they qualify as an element... start over */
-      //advance to next pixel, do not record index, track separation
-      sep1 = x;		// reset separation to current pos
-      sep2 = x;
-    }
-  }
+  //STHRESHMIN = near;		// near plane depth
+  //STHRESHMAX = far;		// far plane depth
 
-
-  /* Scan line-by-line to Find image elements and
+  /* While moving through all depth levels, 
+   * Scan line-by-line to Find image elements and
    * Write target->img binary values (0=black, 2=white) */
+for(sthresh = STHRESHMIN; sthresh < STHRESHMAX; sthresh++)
+{
+  zval = ((float)(2)) * ((float)((STHRESHMAX-STHRESHMIN)-(sthresh-STHRESHMIN)))/((float)(STHRESHMAX-STHRESHMIN));	// calc color value (representative of depth)
   for(y=0;y<maxY;y++){
     flag=0;
     sep1=0;
     sep2=sep1;
     for(x=0;x<maxX;x++){
-      if((x+STHRESH) > maxX){	// Stay in-bounds (memory)
-        //if(!flag){
-	  //y = maxY/3;		// separation was not found... try another y line
-	  //x = 0;
-	  //continue;
-        //}
-        break;			// line is done
+      if((x+sthresh) > maxX){	// Stay in-bounds (memory)
+        // 
+        break;			// line is done (close enough)
       }
-      if( (*((sirds->img) + (x + maxX*y))) == ((*((sirds->img) + (STHRESH + x + maxX*y)))) ){  /* PIXELS MATCH */
+      if( (*((sirds->img) + (x + maxX*y))) == ((*((sirds->img) + (sthresh + x + maxX*y)))) ){  /* PIXELS MATCH */
         sep2++;		//same, so record index
       		//check if next pixel also matches
       		//if not, delete index, start over...
       		//if so, continue until matching ceases (you've found the second image!)
       }
       else if((sep2-sep1) >= PTHRESH){	/* RUN LONG ENOUGH to be an image element? Write & move on */
-        /* add later: grow backwards (x--) to verify element wasn't truncated */
-        //
-	for(x=sep1;x<sep2;x++){
-		*((target->img) + (x + maxX*y)) = 2.0;
+        /* Grow backwards (x--) to verify element wasn't truncated */
+	#if(1)
+        for(x=sep1; (*((sirds->img)+(x+maxX*y)))==((*((sirds->img)+(sthresh+x+maxX*y)))); ){
+	        if(--x < 0)	// Stay in-bounds (memory)
+		  break;
+       		else
+		  sep1--;
 	}
-        //break;			// exit loop, go to next y line
+	#endif
+	for(x=sep1;x<sep2;x++){
+		*((target->img) + (x + maxX*y)) = zval;
+	}
 	sep1 = x;			// look for next element in the same y line
 	sep2 = x;
       }
@@ -245,9 +214,10 @@ int DecodeStereo(IMAGE *target, IMAGE *sirds)
       }
     }
   } 
+}
 
   // Return
-  free(pix);
+  //free(pix);
   return 0;
 
 }	/* end decodestereo */
@@ -268,13 +238,11 @@ int main(int argc, char **argv)	// argv are the command-line arguments
 	if(argc<5)		// too few command-line arguments?
 	{
 		printf("Command-line usage:\n");
-		printf("   %s (inf) (outf) (x) (y) (sthresh) (pthresh)\n",argv[0]);
+		printf("   %s (inf) (outf) (x) (y) (pthresh)\n",argv[0]);
 		printf("   (inf)  is the input file name\n");
 		printf("   (outf) is the output file name\n");
 		printf("   (x), (y) are the image dimensions\n");
-		printf("   (sthresh) is an optional stereo separation threshold\n");
 		printf("   (pthresh) is an optional image element width threshold\n");
-		printf("Parameter sthresh must be specified if pthresh spec is entered.\n");
 		exit(0);
 	}
 
@@ -288,14 +256,13 @@ int main(int argc, char **argv)	// argv are the command-line arguments
 	data->xmax = nextargi;		// Read image dimensions
 	data->ymax = nextargi; 
 	data->zmax =  1;
-	if(temp>5){ STHRESH = nextargi; }
-	//else	   { STHRESH = (data->xmax)/100; }
-	//else	   { STHRESH = near; }
-	else	   { STHRESH = far; }
-	if(temp>6){ PTHRESH = nextargi; }
-	else	   { PTHRESH = (data->xmax)/100; }
+	if(temp>5){ PTHRESH = nextargi; }
+	else	  { PTHRESH = (data->xmax)/100; }
 
-	printf("\nCurrent Settings are as follows:\nMinimum Predicted Stereo Separation Threshold = %d\nMinimum Image Element Width = %d\n\n",STHRESH,PTHRESH);
+	STHRESHMIN = near;
+	STHRESHMAX = far;
+
+	printf("Current Settings:\n   Minimum Image Element Width = %d\n   Minimum Near Plane = %d\n   Maximimum Far Plane = %d\n",PTHRESH,STHRESHMIN,STHRESHMAX);
 
 	// Read Image, Allocate Img mem
 	printf("Reading image %s with dimensions %d, %d, %d\n",infname,data->xmax,data->ymax,data->zmax);
