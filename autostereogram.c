@@ -167,7 +167,7 @@ int heightmap(IMAGE *map)
  * ***************************************************/
 int DrawAutoStereogram(IMAGE *target, IMAGE *Zimage)
 {
-  /* Object’s depth is Z(x,y) (between 0 and 1) */
+  /* Object's depth is Z(x,y) (between 0 and 1) */
   int x,y;		/* Coordinates of the current point */
 
   int maxX = Zimage->xmax;

@@ -1,0 +1,9 @@
+*.swp
+*.swo
+*.o
+autostereogram
+decoder
+float01uchar
+float02uchar
+mfilter
+uchar02float
