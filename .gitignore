@@ -1,4 +1,11 @@
 tags
+*.raw
+*.tiff
+*.tif
+*.gif
+*.jpg
+*.JPG
+*.png
 *.swp
 *.swo
 *.o
