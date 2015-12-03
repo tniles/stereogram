@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [[ $# -ne 3 ]] ; then
+    echo "Usage: ./gen inFile width height"
+    exit 0
+fi
+
+inFile="$1"
+width="$2"
+height="$3"
+
+tempFile="temp"
+
+# produce heightmap: translate raw 8-bit uchar to float (0.0-2.0)
+./uchar02float "${inFile}" ${tempFile}Float.raw $width $height
+
+# produce stereogram from heightmap
+./autostereogram ${tempFile}Float.raw ${tempFile}Sird.raw $width $height
+
+# prepare for image: translate raw float to 8-bit uchar
+./float02uchar ${tempFile}Sird.raw ${tempFile}View.raw $width $height
+
+# convert to viewable image format
+raw2tiff -w $width -l $height ${tempFile}View.raw "${inFile%.*}"Sirds.tif
+
+# cleanup
+rm ${tempFile}Float.raw ${tempFile}Sird.raw ${tempFile}View.raw
+exit 0
