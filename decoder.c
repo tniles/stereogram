@@ -151,13 +151,12 @@ int heightmap(IMAGE *map)
  * ***************************************************/
 int DecodeStereo(IMAGE *target, IMAGE *sirds)
 {
-  /* Object’s depth is Z(x,y) (between 0 and 1) */
+  /* Object's depth is Z(x,y) (between 0 and 1) */
   int x,y;		/* Current point - MUST BE SIGNED! */
 
   int maxX = sirds->xmax;
   int maxY = sirds->ymax;
 
-  int flag;
   int sep1, sep2;	/* Stereo separation tracked by STHRESH, calc'd thru sep2-sep1 */
 
   //PIXEL *pix;		/* temp array for pixel correlation */
@@ -178,7 +177,6 @@ for(sthresh = STHRESHMIN; sthresh < STHRESHMAX; sthresh++)
 {
   zval = ((float)(2)) * ((float)((STHRESHMAX-STHRESHMIN)-(sthresh-STHRESHMIN)))/((float)(STHRESHMAX-STHRESHMIN));	// calc color value (representative of depth)
   for(y=0;y<maxY;y++){
-    flag=0;
     sep1=0;
     sep2=sep1;
     for(x=0;x<maxX;x++){

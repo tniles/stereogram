@@ -1,9 +1,4 @@
-This was a school project and I'm hopefully going to revive it.
-
-NOTE: this is NOT my best work. But that's exactly the point: I've learned a lot in the last 
-five years.
-
-And, you have to admit, it is a pretty cool project/idea ("magic eyes", and all). :-)
+This was a school project and I'm hoping to revive it.
 
 
 /////////////////////////////////////////////////
