@@ -1,13 +1,15 @@
-This was a school project and I'm hoping to revive it.
+
+Use './gen imageFile' to generate a SIRDS (single image random dot stereogram).
+
+    For sample images, I recommend googling "depth map" and finding a image you wish to try.
+    Some models are better than others; the higher the contrast (more depth), the better.
+    Try 2 or 3 models as SIRDS are not always as easy to see as other stereograms.
 
 
 /////////////////////////////////////////////////
-
-This is the program "chain" required to fully process a Single Image Random Dot Stereogram 
-(SIRDS) to completion. 
-
-
 /////////////////////////////////////////////////
+/////////////////////////////////////////////////
+
 12/2/2015
 
 With a *.jpg file, do:
