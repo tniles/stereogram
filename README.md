@@ -20,7 +20,8 @@ a special image processing suite which I no longer have). The result should be a
         Grayscale LUT
         8-bit unsigned (uchar, values 0-255)
         Note the grayscale makes the 3D effect viable, or at least needs to be represented as 
-        a 3D object.
+        a 3D object. Better "3D Modeling" in the native image of course results in a better
+        stereo effect.
 
 Use uchar02Float to convert to a heightmap (another *.raw image file).
 
@@ -34,6 +35,13 @@ Use raw2tiff (from libtiff) with switches -w,-l,-c to convert to a .tif image fo
     -c      compression scheme (none, packbits (default), jpg)
     Note: requires libtiff-tools ('sudo apt-get install libtiff-tools')
 
+####
+Suggested preprocessing for 3D model image with arbitrary colormap:
+#convert -separate foo.jpg fooG.jpg | convert -combine fooG* -separate foo.png
+-or-
+#convert foo.jpg -set colorspace Gray -separate -average foo.png
+-or with hist equalization-
+#convert foo.jpg -set colorspace Gray -separate -average -equalize foo.png
 ####
 afrik.jpg       # 1024x768
 afrik_8.raw     # 1024x1024
