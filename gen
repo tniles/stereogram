@@ -1,18 +1,26 @@
 #!/bin/bash
 
-if [[ $# -ne 3 ]] ; then
-    echo "Usage: ./gen inFile width height"
+if [[ $# -ne 1 ]] ; then
+    echo "Usage: ./gen inFile"
     exit 0
 fi
 
 inFile="$1"
-width="$2"
-height="$3"
+width=`identify $inFile | awk '{print $3}' | tr x ' ' | awk '{print $1}'`
+height=`identify $inFile | awk '{print $3}' | tr x ' ' | awk '{print $2}'`
+
+echo -e "\nProcessing $inFile with dimensions ${width}x${height} ...\n"
 
 tempFile="temp"
 
+# convert image to grayscale (the -equalize switch performs a histogram equalization)
+convert "${inFile}" -set colorspace Gray -separate -average -equalize ${tempFile}.png
+
+# convert image to 8-bit raw (hijack red channel, could do b or g, doesn't matter)
+convert ${tempFile}.png -interlace none -depth 8 r:${tempFile}.raw
+
 # produce heightmap: translate raw 8-bit uchar to float (0.0-2.0)
-./uchar02float "${inFile}" ${tempFile}Float.raw $width $height
+./uchar02float ${tempFile}.raw ${tempFile}Float.raw $width $height
 
 # produce stereogram from heightmap
 ./autostereogram ${tempFile}Float.raw ${tempFile}Sird.raw $width $height
@@ -24,5 +32,9 @@ tempFile="temp"
 raw2tiff -w $width -l $height ${tempFile}View.raw "${inFile%.*}"Sirds.tif
 
 # cleanup
-rm ${tempFile}Float.raw ${tempFile}Sird.raw ${tempFile}View.raw
+rm ${tempFile}.png \
+   ${tempFile}.raw \
+   ${tempFile}Float.raw \
+   ${tempFile}Sird.raw \
+   ${tempFile}View.raw
 exit 0
