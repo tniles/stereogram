@@ -1,3 +1,7 @@
+This was a school project I wanted to revive. I've now got it automated so at least it can be
+used simply. The C code itself could really use a good refactoring, but it works. :-)
+
+/////////////////////////////////////////////////
 
 Use './gen imageFile' to generate a SIRDS (single image random dot stereogram).
 
